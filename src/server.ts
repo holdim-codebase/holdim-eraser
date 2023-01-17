@@ -1,6 +1,6 @@
 import fastifyFactory from 'fastify'
 import axios from 'axios'
-import { repositories } from '../src/repositories'
+import { repositories } from './repositories'
 import { logger } from './logging'
 
 export const fastify = fastifyFactory({ logger })
