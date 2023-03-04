@@ -19,10 +19,16 @@ const removeDeletedProposals = async (from: Date) => {
     },
   })
 
+  const totalProposals = proposals.length
+  logger.info(`Found ${totalProposals} proposals created from ${from.toUTCString()} to ${to.toUTCString()}`)
+
+  let currentProposalIndex = 0
   for (const proposal of proposals) {
+    currentProposalIndex++
+    logger.info(`Processing ${(currentProposalIndex / totalProposals * 100).toFixed()}%`)
     try {
       // Time delay is set to avoid HTTP 429 status from snapshot server
-      await new Promise(resolve => setTimeout(resolve, 1e3))
+      await new Promise(resolve => setTimeout(resolve, 200))
 
       const { data } = await axios.post(SNAPSHOT_BASE_URL, {
         operationName: 'Proposal',
@@ -30,9 +36,13 @@ const removeDeletedProposals = async (from: Date) => {
         query: 'query Proposal($id: String!) {\n  proposal(id: $id) {id}}',
       })
 
-      console.log({ data, id: proposal.id })
-      if (!data) {
+      if (!data || !data.data || !data.data.proposal) {
+        logger.warn('NEEDS DELETION', {
+          data,
+          id: proposal.id,
+        })
         await repositories.proposal.delete({ where: { id: proposal.id } })
+        logger.info('DELETED')
       }
     } catch (error) {
       console.log(`error: ${(error as Error).message}, proposal: ${JSON.stringify(proposal.id)}`)
@@ -42,8 +52,6 @@ const removeDeletedProposals = async (from: Date) => {
 
 fastify.post('/', async (request, reply) => {
   try {
-    console.log(request.body)
-
     await removeDeletedProposals(new Date(Date.now() - DAY_IN_MS))
 
     return await reply.status(200).send({})
