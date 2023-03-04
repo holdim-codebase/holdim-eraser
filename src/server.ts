@@ -20,7 +20,7 @@ const removeDeletedProposals = async (from: Date) => {
   })
 
   const totalProposals = proposals.length
-  logger.info(`Found ${totalProposals} proposals created from ${from.toUTCString()} to ${to.toUTCString()}`)
+  logger.info(`Found ${totalProposals} proposals created from ${from.toUTCString()}`)
 
   let currentProposalIndex = 0
   for (const proposal of proposals) {
